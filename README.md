@@ -24,5 +24,7 @@ cd mie-san
 ```bash
 python -m pip install -r requirements.txt
 
-python main.py
+#python main.py
+uvicorn main:app --reload
+
 ```
