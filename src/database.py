@@ -12,7 +12,8 @@ client = MongoClient(MONGO_URI)
 db = client[MONGO_DB_NAME]
 users_collection = db["users"]
 chats_collection = db["chats"]
-
+pdf_collection = db["pdf_data"]
+excel_collection = db["excel_data"]
 def verify_api_key(api_key):
     """ Kiểm tra API key có tồn tại trong MongoDB không """
     return users_collection.find_one({"api_key": api_key}) is not None

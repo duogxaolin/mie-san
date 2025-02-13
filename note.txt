@@ -1,5 +1,0 @@
-faiss-cpu: Dùng để lưu và tìm kiếm vector.
-sentence-transformers: Dùng để chuyển văn bản thành vector embeddings.
-pymongo: Dùng để lưu dữ liệu gốc trong MongoDB.
-fastapi & uvicorn: Để chạy API.
-openai: Kết nối với Ollama.

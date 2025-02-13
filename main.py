@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+import os
 from src.routes.upload import router as upload_router
 from src.routes.chat import router as chat_router
 from dotenv import load_dotenv
