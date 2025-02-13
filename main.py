@@ -5,7 +5,6 @@ from src.routes.chat import router as chat_router
 from dotenv import load_dotenv
 
 load_dotenv()
-
 PORT = os.getenv("PORT", "8080")
 HOST_URL = os.getenv("HOST_URL", "127.0.0.1")
 
