@@ -1,0 +1,13 @@
+.DS_Store
+.vscode
+.env
+.venv
+.swp
+dist
+build
+.cache
+*.exe
+.idea
+test_data
+*.crt
+__debug_bin*
