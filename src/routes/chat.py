@@ -12,11 +12,10 @@ class ChatRequest(BaseModel):
 
 @router.post("/chat/")
 async def chat_with_ai(request: ChatRequest):
-    start_time = time.time()  # Bắt đầu đo thời gian
-
+    start_time = time.time()
     try:
         response = await chat_with_mie(request.prompt, request.session_id, request.api_key)
-        elapsed_time = time.time() - start_time  # Tính thời gian phản hồi
+        elapsed_time = time.time() - start_time
         return {
             "response": response,
             "response_time": f"{elapsed_time:.2f} s"

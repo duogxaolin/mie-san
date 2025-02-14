@@ -1,9 +1,10 @@
 from fastapi import FastAPI
-from src.database import connect_to_db, close_db
+from dotenv import load_dotenv
 import os
+
+from src.database import init_db, close_db
 from src.routes.upload import router as upload_router
 from src.routes.chat import router as chat_router
-from dotenv import load_dotenv
 
 load_dotenv()
 PORT = os.getenv("PORT", "8080")
@@ -17,11 +18,11 @@ app = FastAPI(
 
 @app.on_event("startup")
 async def startup_event():
-    await connect_to_db()  # Khởi tạo MySQL + tự tạo database & bảng
+    await init_db()  # Khởi tạo database, tạo bảng và thiết lập connection pool
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    await close_db()  # Đóng MySQL khi server dừng
+    await close_db()  # Đóng connection pool khi server dừng
 
 app.include_router(upload_router)
 app.include_router(chat_router)

@@ -5,7 +5,7 @@ ollama.pull("gemma2:2b")
 
 # ✅ Tạo một session cho cả chương trình thay vì gọi lại nhiều lần
 class OllamaChat:
-    def __init__(self, model="gemma2:2b"):
+    def __init__(self, model="gemma2"):
         self.model = model
         self.chat_history = []  # ✅ Giữ lịch sử hội thoại để mô hình phản hồi nhanh hơn
 

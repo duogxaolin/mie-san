@@ -1,38 +1,60 @@
 import aiomysql
-import asyncio
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
-MYSQL_USER = os.getenv("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
-MYSQL_DB = os.getenv("MYSQL_DATABASE", "mie_san")
+class DatabaseManager:
+    def __init__(self, host: str, user: str, password: str, db: str, autocommit: bool = True):
+        self.host = host
+        self.user = user
+        self.password = password
+        self.db = db
+        self.autocommit = autocommit
+        self.pool = None
 
-pool = None  # Connection pool
+    async def connect(self):
+        self.pool = await aiomysql.create_pool(
+            host=self.host,
+            user=self.user,
+            password=self.password,
+            db=self.db,
+            autocommit=self.autocommit
+        )
+        print("✅ Connected to MySQL database.")
+
+    async def close(self):
+        if self.pool:
+            self.pool.close()
+            await self.pool.wait_closed()
+            print("❌ Database connection closed.")
+
+# Global instance của DatabaseManager
+db_manager = DatabaseManager(
+    host=os.getenv("MYSQL_HOST", "localhost"),
+    user=os.getenv("MYSQL_USER", "root"),
+    password=os.getenv("MYSQL_PASSWORD", ""),
+    db=os.getenv("MYSQL_DATABASE", "mie_san")
+)
 
 async def create_database():
-    """Tạo database nếu chưa có"""
-    conn = await aiomysql.connect(
-        host=MYSQL_HOST,
-        user=MYSQL_USER,
-        password=MYSQL_PASSWORD,
-    )
+    host = os.getenv("MYSQL_HOST", "localhost")
+    user = os.getenv("MYSQL_USER", "root")
+    password = os.getenv("MYSQL_PASSWORD", "")
+    db = os.getenv("MYSQL_DATABASE", "mie_san")
+    conn = await aiomysql.connect(host=host, user=user, password=password)
     async with conn.cursor() as cursor:
-        await cursor.execute(f"CREATE DATABASE IF NOT EXISTS {MYSQL_DB}")
-    await conn.ensure_closed()
+        await cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db}")
+    conn.close()
 
 async def create_tables():
-    """Tạo các bảng cần thiết nếu chưa có"""
-    conn = await aiomysql.connect(
-        host=MYSQL_HOST,
-        user=MYSQL_USER,
-        password=MYSQL_PASSWORD,
-        db=MYSQL_DB
-    )
+    host = os.getenv("MYSQL_HOST", "localhost")
+    user = os.getenv("MYSQL_USER", "root")
+    password = os.getenv("MYSQL_PASSWORD", "")
+    db = os.getenv("MYSQL_DATABASE", "mie_san")
+    conn = await aiomysql.connect(host=host, user=user, password=password, db=db)
     async with conn.cursor() as cursor:
-        # Tạo bảng users
+        # Bảng users
         await cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -42,8 +64,7 @@ async def create_tables():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)
-        
-        # Tạo bảng chats
+        # Bảng chats
         await cursor.execute("""
         CREATE TABLE IF NOT EXISTS chats (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -55,8 +76,7 @@ async def create_tables():
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
         """)
-
-        # Tạo bảng files
+        # Bảng files
         await cursor.execute("""
         CREATE TABLE IF NOT EXISTS files (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -65,34 +85,12 @@ async def create_tables():
             uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)
-        
-    await conn.ensure_closed()
+    conn.close()
 
-async def connect_to_db():
-    """Kết nối MySQL và tạo connection pool"""
-    global pool
-    await create_database()  # Tạo database nếu chưa có
-    await create_tables()  # Tạo bảng nếu chưa có
-    pool = await aiomysql.create_pool(
-        host=MYSQL_HOST,
-        user=MYSQL_USER,
-        password=MYSQL_PASSWORD,
-        db=MYSQL_DB,
-        autocommit=True
-    )
-    print("✅ Đã kết nối MySQL và thiết lập database!")
+async def init_db():
+    await create_database()
+    await create_tables()
+    await db_manager.connect()
 
 async def close_db():
-    """Đóng connection pool khi tắt server"""
-    global pool
-    if pool:
-        pool.close()
-        await pool.wait_closed()
-        print("❌ Đã đóng kết nối MySQL.")
-
-async def get_db_connection():
-    """Lấy kết nối từ pool"""
-    global pool
-    if not pool:
-        await connect_to_db()
-    return await pool.acquire()
+    await db_manager.close()

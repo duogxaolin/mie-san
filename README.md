@@ -39,6 +39,7 @@ mie-san/
 │── uploads/               # Lưu file PDF, Excel
 │── src/
 │   ├── database.py        # Kết nối MySQL
+│   ├── repositories.py    # Quản lý kết nối OOP
 │   ├── faiss_index.py     # Xử lý FAISS
 │   ├── process_pdf.py     # Xử lý PDF
 │   ├── process_excel.py   # Xử lý Excel
@@ -46,5 +47,4 @@ mie-san/
 │   ├── routes/
 │   │   ├── upload.py  # API upload PDF, Excel 
 │   │   ├── chat.py    # API chat  
-│   │   ├── search.py  # API search
 ```
