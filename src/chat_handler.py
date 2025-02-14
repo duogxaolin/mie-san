@@ -1,5 +1,5 @@
 import os
-from openai import OpenAI
+import ollama
 from src.faiss_index import search_faiss
 from src.database import get_db_connection
 from dotenv import load_dotenv
@@ -7,52 +7,46 @@ import asyncio
 
 load_dotenv()
 
-API_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/v1")
-API_KEY = os.getenv("OLLAMA_API_KEY", "duogxaolin")
-
-client_ollama = OpenAI(
-    base_url=API_URL,
-    api_key=API_KEY
-)
-
 async def verify_api_key(api_key):
-    """ Kiểm tra API Key trong MySQL """
+    """ Kiểm tra API Key hợp lệ trong MySQL """
     conn = await get_db_connection()
     async with conn.cursor() as cursor:
-        await cursor.execute("SELECT COUNT(*) FROM users WHERE api_key = %s", (api_key,))
+        await cursor.execute("SELECT 1 FROM users WHERE api_key = %s LIMIT 1", (api_key,))
         result = await cursor.fetchone()
     await conn.ensure_closed()
-    return result[0] > 0
+    return result is not None
 
 async def get_chat_history(session_id):
-    """ Lấy lịch sử chat từ MySQL theo session_id """
+    """ Lấy lịch sử chat từ MySQL theo session_id (tối ưu hơn) """
     conn = await get_db_connection()
     async with conn.cursor() as cursor:
         await cursor.execute("SELECT role, message FROM chats WHERE session_id = %s ORDER BY timestamp ASC", (session_id,))
-        chat_logs = await cursor.fetchall()
+        return [{"role": role, "content": message} for role, message in await cursor.fetchall()]
     await conn.ensure_closed()
-    return [{"role": log[0], "content": log[1]} for log in chat_logs]
 
 async def chat_with_mie(prompt: str, session_id: str, api_key: str) -> str:
-    """ Xử lý hội thoại với chatbot Mie-san """
+    """ Xử lý hội thoại với chatbot Mie-san qua Ollama """
     if not await verify_api_key(api_key):
         return "API Key không hợp lệ!"
 
-    chat_history = await get_chat_history(session_id)
-   ## related_info = await search_faiss(prompt)
+    # Load lịch sử chat & tìm kiếm thông tin liên quan
+    chat_history_task = get_chat_history(session_id)
+    related_info_task = search_faiss(prompt)  # Nếu FAISS hoạt động
 
+    chat_history, related_info = await asyncio.gather(chat_history_task, related_info_task)
+
+    # Chuẩn bị tin nhắn cho mô hình
     messages = [{"role": "system", "content": "Bạn là một trợ lý AI thông minh."}]
-    if chat_history:
-        messages.extend(chat_history)
+    messages.extend(chat_history)
 
     user_message = {"role": "user", "content": prompt}
-  ##  if related_info:
-   ##     user_message["content"] += f"\nThông tin liên quan: {related_info}"
+    if related_info:
+        user_message["content"] += f"\nThông tin liên quan: {related_info}"
     messages.append(user_message)
 
-    response = client_ollama.chat.completions.create(
-        model="gemma2:2b",
-        messages=messages
-    )
-
-    return response.choices[0].message.content
+    # Gọi Ollama (không cần API Key)
+    try:
+        response = ollama.chat(model="gemma2:2b", messages=messages)
+        return response["message"]["content"]
+    except Exception as e:
+        return f"Lỗi khi gọi Ollama: {str(e)}"

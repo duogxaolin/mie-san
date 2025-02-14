@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from src.chat_handler import chat_with_mie
+import time
 
 router = APIRouter()
 
@@ -11,8 +12,14 @@ class ChatRequest(BaseModel):
 
 @router.post("/chat/")
 async def chat_with_ai(request: ChatRequest):
+    start_time = time.time()  # Bắt đầu đo thời gian
+
     try:
         response = await chat_with_mie(request.prompt, request.session_id, request.api_key)
-        return {"response": response}
+        elapsed_time = time.time() - start_time  # Tính thời gian phản hồi
+        return {
+            "response": response,
+            "response_time": f"{elapsed_time:.2f} s"
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
