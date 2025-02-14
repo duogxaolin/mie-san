@@ -1,14 +1,21 @@
 import pdfplumber
-from src.database import cursor, db
+from src.database import get_db_connection
 from src.faiss_index import build_faiss_index
+import asyncio
 
-def extract_text_from_pdf(pdf_path):
+async def extract_text_from_pdf(pdf_path):
+    """ Trích xuất văn bản từ PDF """
     with pdfplumber.open(pdf_path) as pdf:
-        return "\n".join([page.extract_text() for page in pdf.pages if page.extract_text()]).strip()
+        text = "\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
+    return text.strip()
 
-def save_pdf_to_mysql(pdf_path):
-    text = extract_text_from_pdf(pdf_path)
-    cursor.execute("INSERT INTO pdf_data (content) VALUES (%s)", (text,))
-    db.commit()
-    build_faiss_index()
+async def save_pdf_to_mysql(pdf_path):
+    """ Lưu PDF vào MySQL """
+    text = await extract_text_from_pdf(pdf_path)
+    conn = await get_db_connection()
+    async with conn.cursor() as cursor:
+        await cursor.execute("INSERT INTO pdf_data (content) VALUES (%s)", (text,))
+        await conn.commit()
+    await conn.ensure_closed()
+    await build_faiss_index()
     return "PDF đã được lưu vào MySQL."

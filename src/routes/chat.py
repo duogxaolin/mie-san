@@ -12,7 +12,7 @@ class ChatRequest(BaseModel):
 @router.post("/chat/")
 async def chat_with_ai(request: ChatRequest):
     try:
-        response = chat_with_mie(request.prompt, request.session_id, request.api_key)
+        response = await chat_with_mie(request.prompt, request.session_id, request.api_key)
         return {"response": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

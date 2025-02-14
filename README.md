@@ -5,7 +5,7 @@ Mie-san is an AI chatbot that integrates **Ollama** with **MongoDB** for storing
 ## 🌟 Features
 - 🤖 **Chatbot** (via **Ollama**)  
 - 📄 **Upload & Extract** data from **PDF / Excel**  
-- 🔎 **Smart Searching** with **FAISS + MongoDB**  
+- 🔎 **Smart Searching** with **FAISS + MySQL**  
 
 ## 🚀 Tech Stack
 - **FastAPI** – API framework  
@@ -22,7 +22,7 @@ cd mie-san
 
 ## Usage
 ```bash
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 
 #python main.py
 uvicorn main:app --reload
