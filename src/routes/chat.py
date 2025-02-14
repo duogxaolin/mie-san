@@ -11,7 +11,8 @@ class ChatRequest(BaseModel):
 
 @router.post("/chat/")
 async def chat_with_ai(request: ChatRequest):
-    response = chat_with_mie(request.prompt, request.session_id, request.api_key)
-    if response == "API Key không hợp lệ!":
-        raise HTTPException(status_code=403, detail="API Key không hợp lệ!")
-    return {"response": response}
+    try:
+        response = chat_with_mie(request.prompt, request.session_id, request.api_key)
+        return {"response": response}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

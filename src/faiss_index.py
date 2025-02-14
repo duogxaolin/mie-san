@@ -1,16 +1,13 @@
 import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from src.database import pdf_collection, excel_collection
+from src.database import cursor
 
 model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
 def build_faiss_index():
-    """
-    Xây dựng FAISS Index từ dữ liệu MongoDB.
-    """
-    data = list(pdf_collection.find({}, {"_id": 0, "content": 1})) + \
-           list(excel_collection.find({}, {"_id": 0, "content": 1}))
+    cursor.execute("SELECT content FROM pdf_data UNION SELECT content FROM excel_data")
+    data = cursor.fetchall()
 
     if not data:
         return None
@@ -26,9 +23,6 @@ def build_faiss_index():
     return index
 
 def search_faiss(query):
-    """
-    Tìm kiếm dữ liệu liên quan từ FAISS.
-    """
     try:
         index = faiss.read_index("faiss_index.bin")
     except:
@@ -37,7 +31,7 @@ def search_faiss(query):
     query_vector = model.encode([query])
     _, indices = index.search(np.array(query_vector), 1)
 
-    data = list(pdf_collection.find({}, {"_id": 0, "content": 1})) + \
-           list(excel_collection.find({}, {"_id": 0, "content": 1}))
+    cursor.execute("SELECT content FROM pdf_data UNION SELECT content FROM excel_data")
+    data = cursor.fetchall()
 
     return data[indices[0][0]]["content"]

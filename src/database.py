@@ -1,24 +1,29 @@
-from pymongo import MongoClient
 import os
+import mysql.connector
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Kết nối MongoDB
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
-MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "mie_san_db")
+# Kết nối MySQL
+db = mysql.connector.connect(
+    host=os.getenv("MYSQL_HOST"),
+    user=os.getenv("MYSQL_USER"),
+    password=os.getenv("MYSQL_PASSWORD"),
+    database=os.getenv("MYSQL_DATABASE")
+)
+cursor = db.cursor(dictionary=True)
 
-client = MongoClient(MONGO_URI)
-db = client[MONGO_DB_NAME]
-users_collection = db["users"]
-chats_collection = db["chats"]
-pdf_collection = db["pdf_data"]
-excel_collection = db["excel_data"]
 def verify_api_key(api_key):
-    """ Kiểm tra API key có tồn tại trong MongoDB không """
-    return users_collection.find_one({"api_key": api_key}) is not None
+    """ Kiểm tra API key hợp lệ """
+    cursor.execute("SELECT COUNT(*) as count FROM users WHERE api_key = %s", (api_key,))
+    return cursor.fetchone()["count"] > 0
 
 def get_chat_history(session_id):
-    """ Lấy lịch sử chat từ MongoDB theo session_id """
-    chat_logs = chats_collection.find({"session_id": session_id}).sort("timestamp", 1)
-    return [{"role": log["role"], "content": log["message"]} for log in chat_logs]
+    """ Lấy lịch sử chat từ MySQL """
+    cursor.execute("SELECT role, message FROM chat_history WHERE session_id = %s ORDER BY timestamp ASC", (session_id,))
+    return cursor.fetchall()
+
+def update_api_usage(api_key):
+    """ Giới hạn API sử dụng """
+    cursor.execute("UPDATE users SET request_count = request_count + 1 WHERE api_key = %s", (api_key,))
+    db.commit()

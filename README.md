@@ -28,3 +28,23 @@ python -m pip install -r requirements.txt
 uvicorn main:app --reload
 
 ```
+
+## Cấu trúc
+```bash
+mie-san/
+│── .env                   # Config database
+│── .gitignore             # Chặn file .env khỏi Git
+│── main.py                # Chỉ chứa router
+│── requirements.txt        # Thư viện cần cài đặt
+│── uploads/               # Lưu file PDF, Excel
+│── src/
+│   ├── database.py        # Kết nối MySQL
+│   ├── faiss_index.py     # Xử lý FAISS
+│   ├── process_pdf.py     # Xử lý PDF
+│   ├── process_excel.py   # Xử lý Excel
+│   ├── chat_handler.py    # Chatbot Mie-san
+│   ├── routes/
+│   │   ├── upload.py  # API upload PDF, Excel 
+│   │   ├── chat.py    # API chat  
+│   │   ├── search.py  # API search
+```
