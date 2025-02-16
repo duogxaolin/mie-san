@@ -1,6 +1,6 @@
-# Mie-san: AI Chatbot with Ollama & MongoDB
+# Mie-san: AI Chatbot with Ollama & MySQL
 
-Mie-san is an AI chatbot that integrates **Ollama** with **MongoDB** for storing and retrieving data from PDF/Excel files. It also utilizes **FAISS** for intelligent searching.
+Mie-san is an AI chatbot that integrates **Ollama** with **MySQL** for storing and retrieving data from PDF/Excel files. It also utilizes **FAISS** for intelligent searching.
 
 ## 🌟 Features
 - 🤖 **Chatbot** (via **Ollama**)  
@@ -9,7 +9,7 @@ Mie-san is an AI chatbot that integrates **Ollama** with **MongoDB** for storing
 
 ## 🚀 Tech Stack
 - **FastAPI** – API framework  
-- **MongoDB** – Database  
+- **MySQL** – Database  
 - **FAISS** – Fast Similarity Search  
 - **Ollama** – AI Model Execution  
 - **OpenAI API** (Self-hosted)  
